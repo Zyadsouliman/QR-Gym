@@ -1,0 +1,495 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Gym QR Code Backend System",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/users/signup": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Signup",
+        "operationId": "signup_users_signup_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/verify-otp": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Verify Otp Endpoint",
+        "operationId": "verify_otp_endpoint_users_verify_otp_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OTPVerify"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/token": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Login",
+        "operationId": "login_users_token_post",
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_login_users_token_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Token"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/gym-id": {
+      "post": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Create Gym Id Endpoint",
+        "operationId": "create_gym_id_endpoint_users_gym_id_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GymIDCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GymIDCreate"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/users/gym-ids": {
+      "get": {
+        "tags": [
+          "users"
+        ],
+        "summary": "Get User Gym Ids Endpoint",
+        "operationId": "get_user_gym_ids_endpoint_users_gym_ids_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/GymIDCreate"
+                  },
+                  "type": "array",
+                  "title": "Response Get User Gym Ids Endpoint Users Gym Ids Get"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "OAuth2PasswordBearer": []
+          }
+        ]
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Read Root",
+        "operationId": "read_root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_login_users_token_post": {
+        "properties": {
+          "grant_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "password"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Grant Type"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "password": {
+            "type": "string",
+            "title": "Password"
+          },
+          "scope": {
+            "type": "string",
+            "title": "Scope",
+            "default": ""
+          },
+          "client_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Id"
+          },
+          "client_secret": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Client Secret"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "password"
+        ],
+        "title": "Body_login_users_token_post"
+      },
+      "GymIDCreate": {
+        "properties": {
+          "id_type": {
+            "type": "string",
+            "title": "Id Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id_type"
+        ],
+        "title": "GymIDCreate"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "OTPVerify": {
+        "properties": {
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "otp_code": {
+            "type": "string",
+            "title": "Otp Code"
+          }
+        },
+        "type": "object",
+        "required": [
+          "username",
+          "otp_code"
+        ],
+        "title": "OTPVerify"
+      },
+      "Token": {
+        "properties": {
+          "access_token": {
+            "type": "string",
+            "title": "Access Token"
+          },
+          "token_type": {
+            "type": "string",
+            "title": "Token Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "access_token",
+          "token_type"
+        ],
+        "title": "Token"
+      },
+      "UserCreate": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "phone_number": {
+            "type": "string",
+            "pattern": "^\\+?1?\\d{9,15}$",
+            "title": "Phone Number"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Date Of Birth"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 8,
+            "title": "Password"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "username",
+          "email",
+          "phone_number",
+          "date_of_birth",
+          "password"
+        ],
+        "title": "UserCreate"
+      },
+      "UserOut": {
+        "properties": {
+          "full_name": {
+            "type": "string",
+            "title": "Full Name"
+          },
+          "username": {
+            "type": "string",
+            "title": "Username"
+          },
+          "email": {
+            "type": "string",
+            "format": "email",
+            "title": "Email"
+          },
+          "phone_number": {
+            "type": "string",
+            "pattern": "^\\+?1?\\d{9,15}$",
+            "title": "Phone Number"
+          },
+          "date_of_birth": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Date Of Birth"
+          },
+          "id": {
+            "type": "integer",
+            "title": "Id"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Updated At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "full_name",
+          "username",
+          "email",
+          "phone_number",
+          "date_of_birth",
+          "id",
+          "is_active",
+          "created_at",
+          "updated_at"
+        ],
+        "title": "UserOut"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    },
+    "securitySchemes": {
+      "OAuth2PasswordBearer": {
+        "type": "oauth2",
+        "flows": {
+          "password": {
+            "scopes": {
+
+            },
+            "tokenUrl": "token"
+          }
+        }
+      }
+    }
+  }
+}
