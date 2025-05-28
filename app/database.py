@@ -2,34 +2,31 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 from .config import get_settings
-import logging
+import os
 
 settings = get_settings()
 
-SQLALCHEMY_DATABASE_URL = f"mysql+pymysql://root:Zyad%401755@localhost:3307/gymqrs_qrsdb"
+# Get database URL from environment variable or use default for local development
+SQLALCHEMY_DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"mysql+pymysql://root:Zyad%401755@localhost:3307/gymqrs_qrsdb"
+)
 
-try:
-    # Create engine with connection pooling
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        pool_size=5,
-        max_overflow=10,
-        pool_timeout=30,
-        pool_recycle=1800,
-        pool_pre_ping=True,  # Enable connection health checks
-        echo=True  # Enable SQL query logging
-    )
-    
-    # Test the connection
-    with engine.connect() as connection:
-        connection.execute(text("SELECT 1"))
-        logging.info("Successfully connected to the database")
-except Exception as e:
-    logging.error(f"Failed to connect to the database: {str(e)}")
-    raise
+# Configure engine with serverless-friendly settings
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL,
+    pool_size=1,  # Reduced pool size for serverless
+    max_overflow=2,  # Reduced overflow for serverless
+    pool_timeout=30,
+    pool_recycle=1800,
+    pool_pre_ping=True,
+    echo=settings.DEBUG,  # Only enable SQL logging in debug mode
+    connect_args={
+        "connect_timeout": 10  # Add connection timeout
+    }
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
 Base = declarative_base()
 
 # Dependency to get DB session
