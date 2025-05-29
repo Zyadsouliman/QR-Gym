@@ -182,3 +182,20 @@ async def get_user_gym_ids_endpoint(
     username = payload.get("sub")
     user = crud.get_user_by_username(db, username)
     return crud.get_user_gym_ids(db, user.id) 
+
+@router.get("/signup")
+async def signup_get():
+    return {"detail": "Method GET not allowed, please use POST for signup."}
+
+@router.get("/verify-otp")
+async def verify_otp_get():
+    return {"detail": "Method GET not allowed, please use POST for OTP verification."}
+
+@router.get("/gym-id")
+async def gym_id_get():
+    return {"detail": "Method GET not allowed, please use POST for creating gym id."}
+
+@router.get("/token")
+async def token_get():
+    return {"detail": "GET method not allowed. Please use POST to obtain token."}
+
