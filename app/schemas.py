@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, validator
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
@@ -16,6 +16,13 @@ class UserBase(BaseModel):
 
 class UserCreate(UserBase):
     password: str = Field(min_length=8)
+    confirm_password: str = Field(min_length=8)
+
+    @validator("confirm_password")
+    def passwords_match(cls, v, values, **kwargs):
+        if "password" in values and v != values["password"]:
+            raise ValueError("Passwords do not match")
+        return v
 
 class UserLogin(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
