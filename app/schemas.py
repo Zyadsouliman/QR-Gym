@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr, Field, field_validator
+from pydantic import BaseModel, EmailStr, Field, model_validator
 from datetime import datetime
 from typing import Optional, List
 from enum import Enum
@@ -14,17 +14,16 @@ class UserBase(BaseModel):
     phone_number: str = Field(pattern=r'^\+?1?\d{9,15}$')
     date_of_birth: datetime
 
+
 class UserCreate(BaseModel):
     password: str = Field(min_length=8)
     confirm_password: str = Field(min_length=8)
 
-    @field_validator("confirm_password")
-    @classmethod
-    def passwords_match(cls, confirm_password, values):
-        password = values.get("password")
-        if password != confirm_password:
+    @model_validator(mode='after')
+    def passwords_match(cls, model):
+        if model.password != model.confirm_password:
             raise ValueError("Passwords do not match")
-        return confirm_password
+        return model
 
 class UserLogin(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
