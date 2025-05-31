@@ -7,7 +7,7 @@ from .. import crud, schemas
 from ..database import get_db
 from ..utils.auth import create_access_token, create_refresh_token, verify_token, get_token_scopes
 from ..utils.otp import create_otp, verify_otp
-from ..utils.email_sms import send_otp_email, send_otp_sms
+from ..utils.email_sms import send_otp_email
 from ..config import get_settings
 from ..utils.limiter import limiter
 import logging
@@ -43,20 +43,14 @@ async def signup(request: Request, user: schemas.UserCreate, db: Session = Depen
             detail="Email already registered"
         )
     
-    # Check if phone number exists
-    if crud.get_user_by_phone(db, user.phone_number):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Phone number already registered"
-        )
-    
     # Create user with hashed password
     db_user = crud.create_user(db, user)
     
     # Generate and send OTP
-    otp = create_otp(db, db_user.id)
+    otp = create_otp(db, db_user.username)
     send_otp_email(db_user.email, otp.otp_code)
-    send_otp_sms(db_user.phone_number, otp.otp_code)
+    # if hasattr(user, 'phone_number') and user.phone_number:
+    #     send_otp_sms(user.phone_number, otp.otp_code)
     
     return db_user
 
@@ -65,68 +59,112 @@ async def signup(request: Request, user: schemas.UserCreate, db: Session = Depen
 async def verify_otp_endpoint(request: Request, otp_data: schemas.OTPVerify, db: Session = Depends(get_db)):
     client_ip = request.client.host
     logging.info(f"OTP verification attempt from IP: {client_ip}")
-    user = crud.get_user_by_username(db, otp_data.username)
+    
+    try:
+        user = crud.get_user_by_username(db, otp_data.username)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid credentials"
+            )
+        
+        if verify_otp(db, otp_data.username, otp_data.otp_code):
+            user.is_active = True
+            db.commit()
+            
+            access_token = create_access_token(
+                data={"sub": user.username, **get_token_scopes(["read"])},
+                expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+            )
+            refresh_token = create_refresh_token(
+                data={"sub": user.username}
+            )
+            return {
+                "access_token": access_token,
+                "refresh_token": refresh_token,
+                "token_type": "bearer"
+            }
+        
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code"
+        )
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+
+@router.post("/resend-otp")
+@limiter.limit(f"{settings.OTP_MAX_ATTEMPTS}/minute")
+async def resend_otp_endpoint(request: Request, otp_data: schemas.ResendOTP, db: Session = Depends(get_db)):
+    client_ip = request.client.host
+    logging.info(f"OTP resend attempt from IP: {client_ip}")
+    
+    user = crud.get_user_by_email(db, otp_data.email)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid credentials"
+            detail="Email not found"
         )
     
-    if verify_otp(db, user.id, otp_data.otp_code):
-        user.is_active = True
-        db.commit()
-        
-        access_token = create_access_token(
-            data={"sub": user.username, **get_token_scopes(["read"])},
-            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-        )
-        refresh_token = create_refresh_token(
-            data={"sub": user.username}
-        )
-        return {
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "token_type": "bearer"
-        }
+    # Generate and send new OTP
+    otp = create_otp(db, user.username)
+    send_otp_email(user.email, otp.otp_code)
     
-    raise HTTPException(
-        status_code=status.HTTP_400_BAD_REQUEST,
-        detail="Invalid credentials"
-    )
+    return {"message": "OTP sent successfully"}
 
 @router.post("/token", response_model=schemas.Token)
 @limiter.limit(f"{settings.LOGIN_RATE_LIMIT}/minute")
 async def login(request: Request, form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     client_ip = request.client.host
     logging.info(f"Login attempt from IP: {client_ip}")
-    user = crud.authenticate_user(db, form_data.username, form_data.password)
-    if not user or not user.is_active:
+    try:
+        user = crud.authenticate_user(db, form_data.username, form_data.password)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid credentials",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account is not active",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        # Create tokens
+        access_token = create_access_token(
+            data={"sub": user.username, **get_token_scopes(form_data.scopes)},
+            expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+        refresh_token = create_refresh_token(
+            data={"sub": user.username}
+        )
+
+        return {
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer"
+        }
+    except Exception as e:
+        db.rollback()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
+            detail=str(e),
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
-    access_token = create_access_token(
-        data={"sub": user.username, **get_token_scopes(form_data.scopes)},
-        expires_delta=timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    refresh_token = create_refresh_token(
-        data={"sub": user.username}
-    )
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer"
-    }
 
 @router.post("/refresh", response_model=schemas.Token)
 @limiter.limit(f"{settings.LOGIN_RATE_LIMIT}/minute")
-async def refresh_token(request: Request, refresh_token: str, db: Session = Depends(get_db)):
+async def refresh_token(request: Request, token_data: schemas.RefreshToken, db: Session = Depends(get_db)):
     client_ip = request.client.host
     logging.info(f"Token refresh attempt from IP: {client_ip}")
     try:
-        payload = verify_token(refresh_token, is_refresh=True)
+        payload = verify_token(token_data.refresh_token, is_refresh=True)
         username = payload.get("sub")
         if not username:
             raise ValueError("Invalid token")
@@ -198,4 +236,3 @@ async def gym_id_get():
 @router.get("/token")
 async def token_get():
     return {"detail": "GET method not allowed. Please use POST to obtain token."}
-

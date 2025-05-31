@@ -8,14 +8,13 @@ class GymIDType(str, Enum):
     PREMIUM = "premium"
 
 class UserBase(BaseModel):
-    full_name: str
     username: str
     email: EmailStr
-    phone_number: str = Field(pattern=r'^\+?1?\d{9,15}$')
+    # phone_number: str = Field(pattern=r'^(\+?\d{1,3}|0)\d{9,15}$')
     date_of_birth: datetime
 
 
-class UserCreate(BaseModel):
+class UserCreate(UserBase):
     password: str = Field(min_length=8)
     confirm_password: str = Field(min_length=8)
 
@@ -42,6 +41,9 @@ class OTPVerify(BaseModel):
     username: str
     otp_code: str
 
+class ResendOTP(BaseModel):
+    email: str
+
 class GymIDBase(BaseModel):
     id_type: str
 
@@ -60,6 +62,7 @@ class GymIDOut(GymIDBase):
 
 class Token(BaseModel):
     access_token: str
+    refresh_token: str
     token_type: str
 
 class TokenData(BaseModel):
@@ -114,3 +117,6 @@ class NutritionPlanOut(NutritionPlanBase):
 
     class Config:
         from_attributes = True
+
+class RefreshToken(BaseModel):
+    refresh_token: str

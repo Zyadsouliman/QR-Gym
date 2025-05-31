@@ -8,18 +8,18 @@ def get_user_by_username(db: Session, username: str):
 def get_user_by_email(db: Session, email: str):
     return db.query(models.User).filter(models.User.email == email).first()
 
-def get_user_by_phone(db: Session, phone_number: str):
-    return db.query(models.User).filter(models.User.phone_number == phone_number).first()
+# def get_user_by_phone(db: Session, phone_number: str):
+#     return db.query(models.User).filter(models.User.phone_number == phone_number).first()
 
 def create_user(db: Session, user: schemas.UserCreate):
     hashed_password = get_password_hash(user.password)
     db_user = models.User(
-        full_name=user.full_name,
         username=user.username,
         email=user.email,
-        phone_number=user.phone_number,
+        # phone_number=user.phone_number,
         password_hash=hashed_password,
-        date_of_birth=user.date_of_birth
+        date_of_birth=user.date_of_birth,
+        is_active=False
     )
     db.add(db_user)
     db.commit()

@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 import secrets
 from typing import List
-
+from pydantic import AnyHttpUrl
 # Load environment variables from .env file
 load_dotenv(override=True)
 
@@ -15,15 +15,23 @@ class Settings(BaseSettings):
     # Base URL settings
     API_V1_STR: str = "/api/v1"
     BACKEND_CORS_ORIGINS: List[str] = [
-        "http://localhost:3000",     # React default port
-        "http://localhost:5173",     # Vite default port
-        "http://localhost:8080",     # Vue default port
-        "http://localhost:4200",     # Angular default port
+        "http://localhost:3000",     
+        "http://localhost:5173",     
+        "http://localhost:8080",     
+        "http://localhost:4200",     
         "http://127.0.0.1:3000",
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8080",
         "http://127.0.0.1:4200",
     ]
+
+     # أضف المتغير ده عشان ما يسببش مشكلة
+    REACT_APP_BASE_URL: AnyHttpUrl  # أو str لو مش عايز تتحقق انه URL
+
+    class Config:
+        env_file = ".env"
+        extra = "forbid"  # يمنع المتغيرات الغير معرفة (لو عندك مشاكل، خليها "ignore")
+
     
     # Database settings
     DB_USER: str = os.getenv("DB_USER", "root")
@@ -42,8 +50,8 @@ class Settings(BaseSettings):
     SECRET_KEY: str = os.getenv("SECRET_KEY", secrets.token_urlsafe(32))
     REFRESH_SECRET_KEY: str = os.getenv("REFRESH_SECRET_KEY", secrets.token_urlsafe(32))
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 30
     
     # Security settings
     PASSWORD_MIN_LENGTH: int = 12
@@ -72,6 +80,11 @@ class Settings(BaseSettings):
     SESSION_COOKIE_SECURE: bool = True
     SESSION_COOKIE_HTTPONLY: bool = True
     SESSION_COOKIE_SAMESITE: str = "Lax"
+    
+    # SMS Settings
+    # TWILIO_ACCOUNT_SID: str = ""
+    # TWILIO_AUTH_TOKEN: str = ""
+    # TWILIO_PHONE_NUMBER: str = ""
     
     class Config:
         env_file = ".env"

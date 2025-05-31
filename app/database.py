@@ -35,4 +35,14 @@ def get_db():
     try:
         yield db
     finally:
-        db.close() 
+        db.close()
+
+def init_db():
+    from .models import Base
+    Base.metadata.create_all(bind=engine)
+
+def update_db():
+    from .models import Base
+    # Drop all tables and recreate them
+    Base.metadata.drop_all(bind=engine)
+    Base.metadata.create_all(bind=engine) 
