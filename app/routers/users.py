@@ -5,12 +5,13 @@ from datetime import timedelta
 from typing import List
 from .. import crud, schemas
 from ..database import get_db
-from ..utils.auth import create_access_token, create_refresh_token, verify_token, get_token_scopes
+from ..utils.auth import create_access_token, create_refresh_token, verify_token, get_token_scopes, get_current_user
 from ..utils.otp import create_otp, verify_otp
 from ..utils.email_sms import send_otp_email
 from ..config import get_settings
 from ..utils.limiter import limiter
 import logging
+from ..models import User
 
 router = APIRouter()
 settings = get_settings()
@@ -192,34 +193,20 @@ async def refresh_token(request: Request, token_data: schemas.RefreshToken, db: 
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-@router.post("/gym-id", response_model=schemas.GymIDCreate)
-async def create_gym_id_endpoint(
-    gym_id: schemas.GymIDCreate,
+@router.post("/gym-access-id", response_model=schemas.GymAccessIDCreate)
+async def create_gym_access_id(
+    gym_id: schemas.GymAccessIDCreate,
     db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+    current_user: User = Depends(get_current_user)
 ):
-    payload = verify_token(token)
-    if "write" not in payload.get("scopes", []):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    return crud.create_gym_id(db, gym_id)
+    return crud.create_gym_access_id(db=db, gym_id=gym_id)
 
-@router.get("/gym-ids", response_model=List[schemas.GymIDCreate])
-async def get_user_gym_ids_endpoint(
+@router.get("/gym-access-ids", response_model=List[schemas.GymAccessIDCreate])
+async def get_user_gym_access_ids(
     db: Session = Depends(get_db),
-    token: str = Depends(oauth2_scheme)
+    current_user: User = Depends(get_current_user)
 ):
-    payload = verify_token(token)
-    if "read" not in payload.get("scopes", []):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    username = payload.get("sub")
-    user = crud.get_user_by_username(db, username)
-    return crud.get_user_gym_ids(db, user.id) 
+    return crud.get_user_gym_ids(db=db, user_id=current_user.id)
 
 @router.get("/signup")
 async def signup_get():

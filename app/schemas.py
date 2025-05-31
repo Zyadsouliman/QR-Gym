@@ -4,8 +4,8 @@ from typing import Optional, List
 from enum import Enum
 
 class GymIDType(str, Enum):
-    STANDARD = "standard"
-    PREMIUM = "premium"
+    normal = "normal"
+    premium = "premium"
 
 class UserBase(BaseModel):
     username: str
@@ -120,3 +120,34 @@ class NutritionPlanOut(NutritionPlanBase):
 
 class RefreshToken(BaseModel):
     refresh_token: str
+
+class GenerateIDsRequest(BaseModel):
+    type: GymIDType
+
+class GenerateIDsResponse(BaseModel):
+    message: str
+    ids: List[str]
+
+class GymAccessIDBase(BaseModel):
+    code: str
+    type: GymIDType
+    is_used: bool = False
+
+class GymAccessIDCreate(GymAccessIDBase):
+    pass
+
+class GymAccessIDOut(GymAccessIDBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
+class VerifyIDRequest(BaseModel):
+    access_id: str = Field(..., pattern=r'^(QRG|PREM)\d{8}$')
+
+class VerifyIDResponse(BaseModel):
+    is_valid: bool
+    message: str
+    id_type: str

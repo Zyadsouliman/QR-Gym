@@ -7,7 +7,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import Response
-from .routers import users
+from .routers import users, gym_ids
 from .database import engine
 from . import models
 from .config import get_settings
@@ -87,6 +87,7 @@ app.add_middleware(
 
 # Include routers with API version prefix
 app.include_router(users.router, prefix=f"{settings.API_V1_STR}/users", tags=["users"])
+app.include_router(gym_ids.router, prefix=settings.API_V1_STR, tags=["gym-ids"])
 
 @app.get("/")
 @limiter.limit(f"{settings.RATE_LIMIT_PER_MINUTE}/minute")

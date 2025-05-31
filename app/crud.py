@@ -34,15 +34,15 @@ def authenticate_user(db: Session, username: str, password: str):
         return False
     return user
 
-def create_gym_id(db: Session, gym_id: schemas.GymIDCreate):
-    db_gym_id = models.GymID(**gym_id.dict())
+def create_gym_access_id(db: Session, gym_id: schemas.GymAccessIDCreate):
+    db_gym_id = models.GymAccessID(**gym_id.dict())
     db.add(db_gym_id)
     db.commit()
     db.refresh(db_gym_id)
     return db_gym_id
 
 def get_user_gym_ids(db: Session, user_id: int):
-    return db.query(models.GymID).filter(models.GymID.user_id == user_id).all()
+    return db.query(models.GymAccessID).filter(models.GymAccessID.user_id == user_id).all()
 
 def create_exercise(db: Session, exercise: schemas.ExerciseCreate):
     db_exercise = models.Exercise(**exercise.dict())

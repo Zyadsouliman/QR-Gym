@@ -1,5 +1,5 @@
-CREATE DATABASE IF NOT EXISTS gymqrs_qrsdb;
-
+DROP DATABASE IF EXISTS gymqrs_qrsdb;
+CREATE DATABASE gymqrs_qrsdb;
 USE gymqrs_qrsdb;
 
 -- جدول المستخدمين
@@ -14,13 +14,13 @@ CREATE TABLE IF NOT EXISTS users (
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- جدول GymID لأنواع الـ IDs (standard أو premium)
--- مفيش CREATE TYPE في MySQL عشان كده استخدم ENUM مباشر في الجدول
-CREATE TABLE IF NOT EXISTS gym_ids (
+-- جدول GymAccessID لأنواع الـ IDs (normal أو premium)
+CREATE TABLE IF NOT EXISTS gym_access_ids (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    id_type ENUM('standard', 'premium') NOT NULL,
-    is_active BOOLEAN DEFAULT TRUE,
+    user_id INT,
+    code VARCHAR(12) UNIQUE NOT NULL,
+    type ENUM('normal', 'premium') NOT NULL,
+    is_used BOOLEAN DEFAULT FALSE,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -70,14 +70,11 @@ CREATE TABLE IF NOT EXISTS nutrition_plans (
 -- جدول OTP لكود التفعيل
 CREATE TABLE IF NOT EXISTS otps (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
+    username VARCHAR(255) NOT NULL,
     otp_code VARCHAR(6) NOT NULL,
     is_used BOOLEAN DEFAULT FALSE,
     expires_at DATETIME NOT NULL,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
 );
-
-DESCRIBE users;
-
 

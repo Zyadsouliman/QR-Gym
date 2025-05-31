@@ -1,4 +1,4 @@
-from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum
+from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, DateTime, Enum, func
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from .database import Base
@@ -17,19 +17,20 @@ class User(Base):
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
-    gym_ids = relationship("GymID", back_populates="user")
+    gym_ids = relationship("GymAccessID", back_populates="user")
     workout_plans = relationship("WorkoutPlan", back_populates="user")
     nutrition_plans = relationship("NutritionPlan", back_populates="user")
 
-class GymID(Base):
-    __tablename__ = "gym_ids"
+class GymAccessID(Base):
+    __tablename__ = "gym_access_ids"
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"))
-    id_type = Column(Enum("standard", "premium", name="id_type"), nullable=False)
-    is_active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    code = Column(String(12), unique=True, nullable=False, index=True)
+    type = Column(Enum('normal', 'premium', name='gym_id_type'), nullable=False)
+    is_used = Column(Boolean, default=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     user = relationship("User", back_populates="gym_ids")
 
