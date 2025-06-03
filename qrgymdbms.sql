@@ -78,3 +78,13 @@ CREATE TABLE IF NOT EXISTS otps (
     FOREIGN KEY (username) REFERENCES users(username) ON DELETE CASCADE
 );
 
+-- SET FOREIGN_KEY_CHECKS = 0;
+
+-- TRUNCATE TABLE exercises;
+-- TRUNCATE TABLE gym_access_ids;
+-- TRUNCATE TABLE nutrition_plans;
+-- TRUNCATE TABLE users;
+-- TRUNCATE TABLE workout_plan_exercises;
+-- TRUNCATE TABLE workout_plans;
+
+-- SET FOREIGN_KEY_CHECKS = 1;
