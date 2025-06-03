@@ -9,7 +9,9 @@ settings = get_settings()
 # Get database URL from environment variable or use default for local development
 SQLALCHEMY_DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"mysql+pymysql://root:Zyad%401755@localhost:3307/gymqrs_qrsdb"
+    # f"mysql+pymysql://root:Zyad%401755@localhost:3307/gymqrs_qrsdb"
+    f"mysql+pymysql://root:UcocWOsOnCirvzsIBHzSraUZWtCRWoJV@mysql.railway.internal:3306/railway"
+
 )
 
 # Configure engine with serverless-friendly settings
