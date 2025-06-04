@@ -62,10 +62,12 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # إضافة CORS middleware **دائماً** بدون شرط
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,  # تأكد من اسم المتغير هنا
+    allow_origins=settings.BACKEND_CORS_ORIGINS,  # Use BACKEND_CORS_ORIGINS instead of CORS_ORIGINS
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Explicitly list methods
     allow_headers=["*"],
+    expose_headers=["*"],
+    max_age=600,  # Cache preflight requests for 10 minutes
 )
 
 # باقي الإعدادات والـ middlewares الأخرى
