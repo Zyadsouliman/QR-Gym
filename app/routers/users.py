@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status, Request, Response
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from datetime import timedelta
@@ -24,6 +24,18 @@ oauth2_scheme = OAuth2PasswordBearer(
         "admin": "Admin access"
     }
 )
+
+@router.options("/signup")
+async def signup_options():
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+            "Access-Control-Max-Age": "600",
+        },
+    )
 
 @router.post("/signup", response_model=schemas.UserOut)
 @limiter.limit(f"{settings.SIGNUP_RATE_LIMIT}/minute")
