@@ -85,22 +85,22 @@ app.add_middleware(
 )
 
 # Add error handler for CORS preflight requests
-@app.exception_handler(Exception)
-async def cors_exception_handler(request: Request, exc: Exception):
-    if request.method == "OPTIONS":
-        return Response(
-            status_code=200,
-            headers={
-                "Access-Control-Allow-Origin": "*",
-                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
-                "Access-Control-Allow-Headers": "*",
-                "Access-Control-Max-Age": "600",
-            },
-        )
-    return JSONResponse(
-        status_code=500,
-        content={"detail": str(exc)},
-    )
+# @app.exception_handler(Exception)
+# async def cors_exception_handler(request: Request, exc: Exception):
+#     if request.method == "OPTIONS":
+#         return Response(
+#             status_code=200,
+#             headers={
+#                 "Access-Control-Allow-Origin": "*",
+#                 "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+#                 "Access-Control-Allow-Headers": "*",
+#                 "Access-Control-Max-Age": "600",
+#             },
+#         )
+#     return JSONResponse(
+#         status_code=500,
+#         content={"detail": str(exc)},
+#     )
 
 # Add global OPTIONS handler
 @app.options("/{full_path:path}")
