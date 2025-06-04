@@ -3,8 +3,8 @@ from functools import lru_cache
 import os
 from dotenv import load_dotenv
 import secrets
-from typing import List
-from pydantic import AnyHttpUrl
+from typing import List, Union
+from pydantic import AnyHttpUrl, validator
 # Load environment variables from .env file
 load_dotenv(override=True)
 
@@ -14,7 +14,9 @@ class Settings(BaseSettings):
     
     # Base URL settings
     API_V1_STR: str = "/api/v1"
-    BACKEND_CORS_ORIGINS: List[str] = [
+    
+    # CORS settings
+    BACKEND_CORS_ORIGINS: List[Union[str, AnyHttpUrl]] = [
         "http://localhost:3000",     
         "http://localhost:5173",     
         "http://localhost:8080",     
@@ -23,9 +25,20 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "http://127.0.0.1:8080",
         "http://127.0.0.1:4200",
+        "http://100.64.0.2:3000",    # Add your actual frontend IP
+        "http://100.64.0.3:3000",    # Add your actual frontend IP
+        "http://100.64.0.4:3000",    # Add your actual frontend IP
     ]
 
-     # أضف المتغير ده عشان ما يسببش مشكلة
+    @validator("BACKEND_CORS_ORIGINS", pre=True)
+    def assemble_cors_origins(cls, v: Union[str, List[str]]) -> Union[List[str], str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        elif isinstance(v, (list, str)):
+            return v
+        raise ValueError(v)
+
+    # أضف المتغير ده عشان ما يسببش مشكلة
     REACT_APP_BASE_URL: AnyHttpUrl  # أو str لو مش عايز تتحقق انه URL
 
     class Config:

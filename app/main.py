@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -6,7 +6,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from .routers import users, gym_ids
 from .database import engine
 from . import models
@@ -59,16 +59,61 @@ app = FastAPI(
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-# إضافة CORS middleware **دائماً** بدون شرط
+# Configure CORS
+origins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "http://localhost:8080",
+    "http://localhost:4200",
+    "http://127.0.0.1:3000",
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8080",
+    "http://127.0.0.1:4200",
+    "http://100.64.0.2:3000",
+    "http://100.64.0.3:3000",
+    "http://100.64.0.4:3000",
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.BACKEND_CORS_ORIGINS,  # Use BACKEND_CORS_ORIGINS instead of CORS_ORIGINS
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],  # Explicitly list methods
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
-    max_age=600,  # Cache preflight requests for 10 minutes
+    max_age=600,
 )
+
+# Add error handler for CORS preflight requests
+@app.exception_handler(Exception)
+async def cors_exception_handler(request: Request, exc: Exception):
+    if request.method == "OPTIONS":
+        return Response(
+            status_code=200,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+                "Access-Control-Allow-Headers": "*",
+                "Access-Control-Max-Age": "600",
+            },
+        )
+    return JSONResponse(
+        status_code=500,
+        content={"detail": str(exc)},
+    )
+
+# Add global OPTIONS handler
+@app.options("/{full_path:path}")
+async def options_handler(request: Request, full_path: str):
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "*",
+            "Access-Control-Max-Age": "600",
+        },
+    )
 
 # باقي الإعدادات والـ middlewares الأخرى
 
